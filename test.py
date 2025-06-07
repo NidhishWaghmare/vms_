@@ -180,37 +180,32 @@ def main(video_path):
     b = x1 - x2
     c = x2 * y1 - x1 * y2
 
-    # Calculate threshold lines for visualization (±CROSSING_TOLERANCE)
-    norm = np.sqrt(a**2 + b**2)
-    if norm == 0:
+    # Calculate unit normal vector (perpendicular to ROI line)
+    dx = x2 - x1
+    dy = y2 - y1
+    length = np.hypot(dx, dy)
+    if length == 0:
         logger.error("Invalid ROI line (zero length)")
         cap.release()
         out.release()
         cv2.destroyAllWindows()
         sys.exit(1)
-    # Offset for threshold lines: c' = c ± CROSSING_TOLERANCE * norm
-    c_pos = c + CROSSING_TOLERANCE * norm
-    c_neg = c - CROSSING_TOLERANCE * norm
-    # Compute points for threshold lines (solve for x at y=0 and y=height)
-    def get_line_points(a, b, c, height, width):
-        points = []
-        if b != 0:
-            x1 = int(-c / b)  # y=0
-            x2 = int(-(c + a * height) / b)  # y=height
-            points = [(x1, 0), (x2, height)]
-        else:
-            y1 = int(-c / a)  # x=0
-            y2 = int(-(c + b * width) / a)  # x=width
-            points = [(0, y1), (width, y2)]
-        # Clip points to frame boundaries
-        for i, (x, y) in enumerate(points):
-            x = max(0, min(x, width))
-            y = max(0, min(y, height))
-            points[i] = (x, y)
-        return points
+    # Normal vector (perpendicular, unit length)
+    nx = -dy / length
+    ny = dx / length
 
-    pos_threshold_points = get_line_points(a, b, c_pos, height, width)
-    neg_threshold_points = get_line_points(a, b, c_neg, height, width)
+    # Offset ROI points by ±CROSSING_TOLERANCE pixels along the normal
+    def offset_point(pt, nx, ny, d):
+        return (int(pt[0] + nx * d), int(pt[1] + ny * d))
+
+    pos_threshold_points = [
+        offset_point(roi_points[0], nx, ny, CROSSING_TOLERANCE),
+        offset_point(roi_points[1], nx, ny, CROSSING_TOLERANCE)
+    ]
+    neg_threshold_points = [
+        offset_point(roi_points[0], nx, ny, -CROSSING_TOLERANCE),
+        offset_point(roi_points[1], nx, ny, -CROSSING_TOLERANCE)
+    ]
     logger.info(f"Positive threshold points: {pos_threshold_points}")
     logger.info(f"Negative threshold points: {neg_threshold_points}")
 
@@ -279,9 +274,15 @@ def main(video_path):
         # Draw ROI line (red)
         cv2.line(frame, roi_points[0], roi_points[1], (0, 0, 255), 2)
 
-        # Draw threshold lines (yellow, thicker for visibility)
-        cv2.line(frame, pos_threshold_points[0], pos_threshold_points[1], (255, 255, 0), 2, cv2.LINE_AA)
-        cv2.line(frame, neg_threshold_points[0], neg_threshold_points[1], (255, 255, 0), 2, cv2.LINE_AA)
+        # Draw threshold lines (cyan and magenta for clarity)
+        cv2.line(frame, pos_threshold_points[0], pos_threshold_points[1], (255, 255, 0), 2, cv2.LINE_AA)  # Cyan
+        cv2.line(frame, neg_threshold_points[0], neg_threshold_points[1], (255, 0, 255), 2, cv2.LINE_AA)  # Magenta
+
+        # Add legend
+        cv2.rectangle(frame, (10, height - 80), (320, height - 20), (0, 0, 0), -1)
+        cv2.putText(frame, "ROI Line", (20, height - 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+        cv2.putText(frame, "+Tolerance", (20, height - 40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 2)
+        cv2.putText(frame, "-Tolerance", (160, height - 40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 255), 2)
 
         # Display crossing count
         cv2.putText(frame, f"Crossings: {state['crossing_count']}", (10, 30), 

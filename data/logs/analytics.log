@@ -1,0 +1,6 @@
+2025-06-07 13:23:03,840 - INFO - Input API URL: http://192.168.1.29:8001/api/v1/aiAnalytics/getCamerasForAnalytics
+2025-06-07 13:23:03,841 - INFO - Output API URL: http://192.168.1.29:8001/api/v1/aiAnalytics/sendAnalyticsJson
+2025-06-07 13:23:03,841 - INFO - Error API URL: http://192.168.1.29:8001/api/v1/aiAnalytics/reportError
+2025-06-07 13:23:04,006 - INFO - Fetching camera data from http://192.168.1.29:8001/api/v1/aiAnalytics/getCamerasForAnalytics (Attempt 1/5)
+2025-06-07 13:23:09,202 - INFO - Received shutdown signal. Stopping all processing.
+2025-06-07 13:23:09,315 - INFO - Application shutdown complete.
