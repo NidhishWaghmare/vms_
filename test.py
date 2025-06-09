@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 # Configuration
 MODEL_PATH = "yolov8l.pt"  # Path to YOLO model
 CLASSES = [1, 2, 3, 5, 7]  # Vehicle classes: 1=motorcycle, 2=car, 3=motorcycle, 5=bus, 7=truck
-CROSSING_TOLERANCE = 10  # Pixels, tolerance for line crossing detection
+CROSSING_TOLERANCE = 20  # Pixels, tolerance for line crossing detection
 OUTPUT_VIDEO_PATH = "night_video.mp4"  # Output video file name
 FRAME_SKIP = 5  # Process every 5th frame
 
